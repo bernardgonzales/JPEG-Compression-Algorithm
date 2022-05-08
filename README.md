@@ -23,3 +23,5 @@ Procedure:
 12. Inverse DCT
 13. Upsample to 4:4:4
 14. Convert to RGB 
+
+Note: In the program I swapped the places of Run-Length Encode/Decode and Arithmetic Encode/Decode to decrease processing time.
