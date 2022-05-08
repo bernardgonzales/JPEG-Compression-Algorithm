@@ -57,6 +57,7 @@ crDCT = blockproc(SubCr,[8 8],DCT,'PadPartialBlocks' ,true);
 %% Quantization 
 % Quanitize all components by dividing each value in the 8x8 block by 
 % the corresponding luminance nad chrominance values.
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Quantizing components..."));
 
 Luminance = [16 11 10 16 24 40 51 61
              12 12 14 19 26 58 60 55
@@ -78,7 +79,6 @@ Chrominance = [17 18 24 47 99 99 99 99;
 
 yQuantStruct = @(block_struct) round(block_struct.data./Luminance);
 cbCrQuantStruct = @(block_struct) round(block_struct.data./Chrominance);
-set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Quantizing components..."));
 
 quantizedY = blockproc(yDCT, [8 8], yQuantStruct);
 quantizedCb = blockproc(cbDCT, [8 8], cbCrQuantStruct);
@@ -245,6 +245,7 @@ end
 
 
 %% Inverse Zigzag
+
 set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Performing inverse zigzag..."));
 
 rleMatY = cell2mat(rldY);
@@ -285,6 +286,7 @@ end
 
 
 %% Inverse Quantize
+
 set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Inverse Quantizing components..."));
 
 %Initialize the structs for inverse quantization
@@ -298,6 +300,7 @@ invquantizedCr = blockproc(invCrZigZag, [8 8], invcbCrQuantStruct);
 
 
 %% Inverse DCT
+
 set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Performing Inverse DCT on components..."));
 
 %Initialize the struct for inverse DCT
@@ -315,6 +318,7 @@ iDCTCr=uint8(iDCTCr);
 
 
 %% Upsample
+
 set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Upsampling components to 4:4:4..."));
 
 up_resampler = vision.ChromaResampler();
@@ -326,12 +330,14 @@ YCbCr_linear = cat(3,iDCTY,Cb_resized_upsample,Cr_resized_upsample);
 
 
 %% Convert to RGB 
+
 set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Converting components from YCbCr to RGB"));
 
 intRgb = ycbcr2rgb(YCbCr_linear);
 
 
 %% Display original and reconstructed images
+
 set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Displaying images..."));
 
 figure, subplot(1,3,1), imshow(rgbImage), title({'Original Image'});
