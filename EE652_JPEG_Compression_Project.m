@@ -10,14 +10,20 @@ close all
 clear
 clearvars;
 
+DisplayBox = TextUpdate;
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Clearing environment..."));
 
 %% Initialization - Read in source image 
 
 % Read in image
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Importing image..."));
+
 rgbImage = imread('mazmass_1600x1200.jpg');
 
 
 %% Subsample 
+
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Converting to YCbCr..."));
 
 % Convert the image from RGB to YCbCr
 ycbcr = rgb2ycbcr(rgbImage);
@@ -26,6 +32,8 @@ ycbcr = rgb2ycbcr(rgbImage);
 Y = ycbcr(:,:,1);
 Cb = ycbcr(:,:,2);
 Cr = ycbcr(:,:,3);
+
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Subsampling components to 4:2:2..."));
 
 % Subsample Cb/Cr to 4:2:2 by overwriting every other pizel with the
 % previous value
@@ -37,6 +45,7 @@ up_resampler.Resampling = '4:4:4 to 4:2:2';
 %% DCT 
 % Perform DCT on all components. Using PadPartialBlocks to pad partial
 % blocks with zeros to make them full sized.
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Performing DCT on components..."));
 
 DCT = @(block_struct) dct2(block_struct.data);
 
@@ -69,6 +78,7 @@ Chrominance = [17 18 24 47 99 99 99 99;
 
 yQuantStruct = @(block_struct) round(block_struct.data./Luminance);
 cbCrQuantStruct = @(block_struct) round(block_struct.data./Chrominance);
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Quantizing components..."));
 
 quantizedY = blockproc(yDCT, [8 8], yQuantStruct);
 quantizedCb = blockproc(cbDCT, [8 8], cbCrQuantStruct);
@@ -78,6 +88,7 @@ quantizedCr = blockproc(crDCT, [8 8], cbCrQuantStruct);
 %% Zigzag 
 % List the quanitized values into a long line. Prepartion for Arithmetic
 % Coding.
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Zigzag scanning components..."));
 
 yZigZag = zeros(size(quantizedY, 1)/8 * size(quantizedY, 2)/8, 64);
 cbZigZag = zeros(size(quantizedCb, 1)/8 * size(quantizedCb, 2)/8, 64);
@@ -130,34 +141,30 @@ end
 rleY = {};
 rleCb = {};
 rleCr = {};
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Run-Length encoding components..."));
 
 % Run-Length encode all rows of arthimetic encoded Y
-disp("Performing Run-Length Encoding on Y component...");
 for row = 1 : size(yZigZag,1)
     res = RunLengthEncode(yZigZag(row,:));
     rleY(row,:) = {res};
 end
-disp("Done")
 
 % Run-Length encode all rows of arthimetic encoded Cb
-disp("Performing Run-Length Encoding on Cb component...");
 for row = 1: size(cbZigZag,1)
     res = RunLengthEncode(cbZigZag(row,:));
     rleCb(row,:) = {res};
 end
-disp("Done")
 
 % Run-Length encode all rows of arthimetic encoded Cr
-disp("Performing Run-Length Encoding on Cr component...");
 for row = 1: size(crZigZag,1)
     res = RunLengthEncode(crZigZag(row,:));
     rleCr(row,:) = {res};
 end
-disp("Done")
 
 
 %% Arithmetic Encoding
 
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Arithmetic encoding components..."));
 
 % Perform Arithmetic Encoding on run-length encoded Y
 sourceY = {};
@@ -165,9 +172,7 @@ seqY = {};
 countsY = {};
 arithEncodedY = {};
 
-disp("Performing Arithmetic Encoding on Y component...");
 [sourceY, seqY, countsY, arithEncodedY] = ArithmeticEncode(rleY, "Y");
-disp("Done")
 
 % Perform Arithmetic Encoding on run-length encoded Cb
 sourceCb = {};
@@ -175,9 +180,7 @@ seqCb = {};
 countsCb = {};
 arithEncodedCb = {};
 
-disp("Performing Arithmetic Encoding on Cb component...");
 [sourceCb, seqCb, countsCb, arithEncodedCb] = ArithmeticEncode(rleCb, "Cb");
-disp("Done")
 
 % Perform Arithmetic Encoding on run-length encoded Cr
 sourceCr = {};
@@ -185,38 +188,35 @@ seqCr = {};
 countsCr = {};
 arithEncodedCr = {};
 
-disp("Performing Arithmetic Encoding on Cr component...");
 [sourceCr, seqCr, countsCr, arithEncodedCr] = ArithmeticEncode(rleCr, "Cr");
-disp("Done")
 
 
 %% Arithmetic Decoding
+
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Arithmetic decoding components..."));
+
 arithDecodedY = {};
 arithDecodedCb = {};
 arithDecodedCr = {};
 
 % Perform Arithmetic Decoding on run-length decoded Y
-disp("Performing Arithmetic Decoding on Y component...");
 [arithDecodedY] = ArithmeticDecode(sourceY,countsY,seqY,arithEncodedY);
-disp("Done")
 
 % Perform Arithmetic Decoding on run-length decoded Cb
-disp("Performing Arithmetic Decoding on Cb component...");
 [arithDecodedCb] = ArithmeticDecode(sourceCb,countsCb,seqCb,arithEncodedCb);
-disp("Done")
 
 % Perform Arithmetic Decoding on run-length decoded Cr
-disp("Performing Arithmetic Decoding on Cr component...");
 [arithDecodedCr] = ArithmeticDecode(sourceCr,countsCr,seqCr,arithEncodedCr);
-disp("Done")
 
 %% Run Length Decoding
+
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Run-Length decoding components..."));
+
 rldY = {};
 rldCb = {};
 rldCr = {};
 
 % Run-Length decode all rows on run-length encoded Y
-disp("Performing Run-Length Decoding on Y component...");
 counter = 1;
 for (cell = 1 : 2 : size(arithDecodedY,2))
     fun1 = cell2mat(arithDecodedY(cell));
@@ -224,11 +224,8 @@ for (cell = 1 : 2 : size(arithDecodedY,2))
     rldY(counter,:) = {RunLengthDecode( fun2, fun1 )};
     counter = counter + 1;
 end
-disp("Done")
-
 
 % Run-Length decode all rows on run-length encoded Cb
-disp("Performing Run-Length Decoding on Cb component...");
 counter = 1;
 for (cell = 1 : 2 : size(arithDecodedCb,2))
     fun1 = cell2mat(arithDecodedCb(cell));
@@ -236,10 +233,8 @@ for (cell = 1 : 2 : size(arithDecodedCb,2))
     rldCb(counter,:) = {RunLengthDecode( fun2, fun1 )};
     counter = counter + 1;
 end
-disp("Done")
 
 % Run-Length decode all rows on run-length encoded Cr
-disp("Performing Run-Length Decoding on Cr component...");
 counter = 1;
 for (cell = 1 : 2 : size(arithDecodedCr,2))
     fun1 = cell2mat(arithDecodedCr(cell));
@@ -247,10 +242,10 @@ for (cell = 1 : 2 : size(arithDecodedCr,2))
     rldCr(counter,:) = {RunLengthDecode( fun2, fun1 )};
     counter = counter + 1;
 end
-disp("Done")
 
 
 %% Inverse Zigzag
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Performing inverse zigzag..."));
 
 rleMatY = cell2mat(rldY);
 rleMatCb = cell2mat(rldCb);
@@ -290,6 +285,7 @@ end
 
 
 %% Inverse Quantize
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Inverse Quantizing components..."));
 
 %Initialize the structs for inverse quantization
 invyQuantStruct = @(block_struct) round(block_struct.data .* Luminance);
@@ -302,6 +298,7 @@ invquantizedCr = blockproc(invCrZigZag, [8 8], invcbCrQuantStruct);
 
 
 %% Inverse DCT
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Performing Inverse DCT on components..."));
 
 %Initialize the struct for inverse DCT
 iDCT = @(block_struct) idct2(block_struct.data);
@@ -317,7 +314,8 @@ iDCTCb=uint8(iDCTCb);
 iDCTCr=uint8(iDCTCr);
 
 
-%% Upsample using row column replication
+%% Upsample
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Upsampling components to 4:4:4..."));
 
 up_resampler = vision.ChromaResampler();
 
@@ -328,11 +326,13 @@ YCbCr_linear = cat(3,iDCTY,Cb_resized_upsample,Cr_resized_upsample);
 
 
 %% Convert to RGB 
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Converting components from YCbCr to RGB"));
 
 intRgb = ycbcr2rgb(YCbCr_linear);
 
 
 %% Display original and reconstructed images
+set(DisplayBox.tx,'string',cat(1,get(DisplayBox.tx,'string'), "Displaying images..."));
 
 figure, subplot(1,3,1), imshow(rgbImage), title({'Original Image'});
 subplot(1,3,3), imshow(intRgb), title({'Reconstructed Image'});
