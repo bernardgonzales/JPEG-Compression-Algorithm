@@ -1,5 +1,6 @@
 # JPEG-Compression-Algorithm
 
+## OVERVIEW
 Please see for overview on how JPEG Compression Algorithm works.
 
 
@@ -25,3 +26,21 @@ Procedure:
 14. Convert to RGB 
 
 Note: In the program I swapped the places of Run-Length Encode/Decode and Arithmetic Encode/Decode to decrease processing time.
+
+## PREREQUISITES
+To run this MATLAB program you will need the following: </br>
+1. MATLAB with the following tool boxes installed: Computer Vision Toolbox & Image Processing Toolbox
+
+
+## RUNNING THE PROGRAM
+1. Download and extract the .m files onto your local machine.
+2. Open MATLAB
+3. In MATLAB, change current folder to the location of the downloaded .m files.
+4. Open the EE652_JPEG_Compression_Project.m file.
+5. Click the run button. 
+
+
+## RESULTS
+* The program will run through each step of the JPEG compression algorithm. Each step is described in the pop up text box.
+* The Arithmetic coding step takes a few minutes to complete.
+* Both the original and reconstructed images are displayed after program completion.
