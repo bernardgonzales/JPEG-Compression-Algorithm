@@ -1,1 +1,2 @@
 # JPEG-Compression-Algorithm
+
